@@ -15,7 +15,7 @@ for a in moves:
 print()
 print_state(state)
 print(moves)
-proc = StateProcessor()
+proc = AlphaStateProcessor()
 proc.process(state)
 print(proc.isTerminal())
 print(algo.utility(proc))

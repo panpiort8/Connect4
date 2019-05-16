@@ -25,21 +25,21 @@ class DeepeningAlgorithm(AlphaBetaAlgorithm):
             d[i] = 0
         return d
 
-    def _getAction(self, state, timer, max_depth):
+    def _get_action(self, state, timer, max_depth):
         depth = 1
         a = -1
         self.nodes = 0
-        while not timer.isOver():
+        while not timer.is_over():
             self.max_depth = depth
             a, v = self.alphabeta(state, depth, -env.INF, env.INF, True, timer)
             depth += 1
         return a
 
     def alphabeta(self, state, depth, alpha, beta, max_player, timer):
-        state_proc = env.StateProcessor()
+        state_proc = env.AlphaStateProcessor()
         state_proc.process(state)
         self.nodes += 1
-        if depth == 0 or state_proc.isTerminal() or timer.isOver():
+        if depth == 0 or state_proc.isTerminal() or timer.is_over():
             return -1, self.utility(state_proc, depth+1)
 
         actions = self.table.get(state)

@@ -48,11 +48,11 @@ widgets = ["Games: ", progressbar.Percentage(), " ", progressbar.Bar(), " ", pro
 pbar = progressbar.ProgressBar(maxval=games, widgets=widgets).start()
 for i in range(games):
     state = env.get_initial_state()
-    proc = env.StateProcessor()
+    proc = env.AlphaStateProcessor()
     proc.process(state)
     color = env.WHITE
     while not proc.isTerminal():
-        a = player[color].getAction(state, time)
+        a = player[color].get_action(state, time)
         env.perform_action(state, a, color)
         proc.process(state)
         color = env.get_oponent_color(color)

@@ -1,41 +1,50 @@
 from environment import *
+from algorithms import api
 
-class VertIterator:
+class Iterator:
     @staticmethod
-    def startPositions():
+    def start_positions():
+        pass
+    @staticmethod
+    def next(w, h):
+        return None
+
+class VertIterator(Iterator):
+    @staticmethod
+    def start_positions():
         return [(w, 0) for w in range(WIDTH)]
     @staticmethod
     def next(w, h):
         return w, h+1
 
-class HorIterator:
+class HorIterator(Iterator):
     @staticmethod
-    def startPositions():
+    def start_positions():
         return [(0, h) for h in range(HEIGHT)]
     @staticmethod
     def next(w, h):
         return w + 1, h
 
-class DiagRightUpIterator:
+class DiagRightUpIterator(Iterator):
     @staticmethod
-    def startPositions():
+    def start_positions():
         return [(w, HEIGHT-1) for w in range(WIDTH)]\
                +[(WIDTH-1, h) for h in range(HEIGHT-1)]
     @staticmethod
     def next(w, h):
         return w - 1, h - 1
 
-class DiagLeftUpIterator:
+class DiagLeftUpIterator(Iterator):
     @staticmethod
-    def startPositions():
+    def start_positions():
         return [(w, HEIGHT-1) for w in range(WIDTH)]\
                +[(0, h) for h in range(HEIGHT-1)]
     @staticmethod
     def next(w, h):
         return w + 1, h - 1
 
-class StateProcessor:
-    def _getInitialMapping(self):
+class AlphaStateProcessor:
+    def _get_initial_mapping(self):
         return [0, 0, 0, 0, 0, 0, 0, 0]
 
     def process(self, state):
@@ -50,14 +59,14 @@ class StateProcessor:
         self.diagRightUp = dict()
         self.diagLeftUp = dict()
         self.total = dict()
-        self.total[WHITE] = self._getInitialMapping()
-        self.total[BLACK] = self._getInitialMapping()
+        self.total[WHITE] = self._get_initial_mapping()
+        self.total[BLACK] = self._get_initial_mapping()
         for iterator, sumDict in zip(
                 [VertIterator, HorIterator, DiagRightUpIterator, DiagLeftUpIterator],
                 [self.vertical, self.horizontal, self.diagRightUp, self.diagLeftUp]):
             for color in (WHITE, BLACK):
-                sumDict[color] = self._getInitialMapping()
-                for w, h in iterator.startPositions():
+                sumDict[color] = self._get_initial_mapping()
+                for w, h in iterator.start_positions():
                     sum = 0
                     while 0 <= w < WIDTH and 0 <= h < HEIGHT:
                         if self.s[w][h] == color:
@@ -73,3 +82,39 @@ class StateProcessor:
 
     def getTuplesNumber(self, k, color):
         return self.total[color][k]
+
+class SimpleStateProcessor(api.StateProcessor):
+    def process(self):
+        state = [list(c) for c in self.state]
+        full_colums = 0
+        for c in state:
+            l = len(c)
+            if l == HEIGHT: full_colums += 1
+            for i in range(HEIGHT-l):
+                c.append(EMPTY)
+
+        for iterator in [VertIterator, HorIterator, DiagLeftUpIterator, DiagLeftUpIterator]:
+            for w, h in iterator.start_positions():
+                black = 0
+                white = 0
+                while 0 <= w < WIDTH and 0 <= h < HEIGHT:
+                    if state[w][h] == WHITE:
+                        white += 1
+                        black = 0
+                    elif state[w][h] == BLACK:
+                        black += 1
+                        white = 0
+                    else:
+                        black = 0
+                        white = 0
+                    if black >= 4:
+                        self.terminal = True
+                        self.winner = BLACK
+                        return
+                    if white >= 4:
+                        self.terminal = True
+                        self.winner = WHITE
+                        return
+                    w, h = iterator.next(w, h)
+        self.terminal = full_colums == 7
+        self.winner = EMPTY

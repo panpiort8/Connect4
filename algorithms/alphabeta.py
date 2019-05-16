@@ -3,7 +3,7 @@ import environment as env
 
 class AlphaBetaAlgorithm(api.Algorithm):
 
-    def _getAction(self, state, timer, max_depth):
+    def _get_action(self, state, timer, max_depth):
         self.nodes = 0
         self.max_depth = max_depth
         a, v = self.alphabeta(state, max_depth, -env.INF, env.INF, True, timer)
@@ -11,9 +11,9 @@ class AlphaBetaAlgorithm(api.Algorithm):
 
     def alphabeta(self, state, depth, alpha, beta, max_player, timer):
         self.nodes += 1
-        state_proc = env.StateProcessor()
+        state_proc = env.AlphaStateProcessor()
         state_proc.process(state)
-        if depth == 0 or state_proc.isTerminal() or timer.isOver():
+        if depth == 0 or state_proc.isTerminal() or timer.is_over():
             return -1, self.utility(state_proc, depth+1)
 
         if max_player:

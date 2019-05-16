@@ -30,18 +30,18 @@ if algos[env.WHITE] is None or algos[env.BLACK] is None:
     sys.exit(1)
 
 player = dict()
-player[env.WHITE] = algos[env.WHITE](env.WHITE)
-player[env.BLACK] = algos[env.BLACK](env.BLACK)
+player[env.WHITE] = algos[env.WHITE](env.WHITE, reuse=True)
+player[env.BLACK] = algos[env.BLACK](env.BLACK, reuse=True)
 
 state = env.get_initial_state()
-proc = env.StateProcessor()
+proc = env.AlphaStateProcessor()
 proc.process(state)
 color = env.WHITE
 while not proc.isTerminal():
     print("\n{} ({}) IS MOVING...".format('WHITE' if color == env.WHITE else 'BLACK', algos[color].__name__))
-    a = player[color].getAction(state, timer=api.Timer(1))
-    print('MOVE:', a)
-    print("nodes visited: {}".format(player[color].nodes))
+    a = player[color].get_action(state, timer=api.Timer(2))
+    player[env.WHITE].update_move(a)
+    player[env.BLACK].update_move(a)
     state = env.get_next_state(state, a, color)
     env.print_state(state)
     proc.process(state)

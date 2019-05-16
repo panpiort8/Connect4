@@ -5,16 +5,30 @@ class Timer:
         self.start = time.time()
         self.time = t
 
-    def isOver(self):
+    def is_over(self):
         return time.time()-self.start >= self.time
+
 
 class Algorithm:
     def __init__(self, color):
         self.color = color
         self.nodes = 0
 
-    def getAction(self, state, timer = Timer(1), max_depth = 4):
-        return self._getAction(state, timer, max_depth)
+    def get_action(self, state, timer, max_depth):
+        return None
 
-    def _getAction(self, state, timer, max_depth):
+    def update_move(self, action):
         pass
+
+class StateProcessor:
+    def __init__(self, state):
+        self.state = state
+
+    def process(self):
+        pass
+
+    def is_terminal(self):
+        return self.terminal
+
+    def get_winner(self):
+        return self.winner
