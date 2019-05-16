@@ -7,6 +7,10 @@ EMPTY = ' '
 WHITE = 'O'
 BLACK = 'X'
 INF = 10000000
+character = dict()
+character[WHITE] = 'O'
+character[BLACK] = 'X'
+character[EMPTY] = ' '
 
 def printf(format, *args):
     sys.stdout.write(format % args)
@@ -16,6 +20,7 @@ def get_initial_state():
 
 def get_oponent_color(my_color):
     return BLACK if my_color == WHITE else WHITE
+    # return my_color*-1
 
 def get_next_state(state, action, color):
     ns = [c for c in state]
@@ -39,7 +44,8 @@ def print_state(state):
     for h in reversed(range(HEIGHT)):
         printf('| ')
         for w in range(WIDTH):
-            printf('%s ', s[w][h])
+            printf('%s ', character[s[w][h]])
         print('|')
+    print('  1 2 3 4 5 6 7')
 
 
