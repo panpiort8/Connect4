@@ -1,9 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 import algorithms.api as api
 import algorithms
 import argparse
 import sys
-import environment as env
+from environment import *
 import progressbar
 
 algo_base = api.Algorithm
@@ -21,47 +21,46 @@ parser.add_argument('-b', '--black_algorithm', type=str, help='algorithm to simu
 args = vars(parser.parse_args())
 
 algos = dict()
-algos[env.WHITE] = None
-algos[env.BLACK] = None
+algos[WHITE] = None
+algos[BLACK] = None
 for name, cls in all_algos:
     if name.lower().startswith(args['white_algorithm'].lower()):
-        algos[env.WHITE] = cls
+        algos[WHITE] = cls
     if name.lower().startswith(args['black_algorithm'].lower()):
-        algos[env.BLACK] = cls
-if algos[env.WHITE] is None or algos[env.BLACK] is None:
+        algos[BLACK] = cls
+if algos[WHITE] is None or algos[BLACK] is None:
     parser.print_help()
     sys.exit(1)
 
 player = dict()
-player[env.WHITE] = algos[env.WHITE](env.WHITE)
-player[env.BLACK] = algos[env.BLACK](env.BLACK)
-time = args['time']
-games = args['games']
+player[WHITE] = algos[WHITE](WHITE)
+player[BLACK] = algos[BLACK](BLACK)
 
 points = dict()
-points[env.WHITE] = 0
-points[env.BLACK] = 0
-points[env.EMPTY] = 0
+points[WHITE] = 0
+points[BLACK] = 0
+points[EMPTY] = 0
 
-print("Comparing {} as WHITE and {} as BLACK".format(algos[env.WHITE].__name__, algos[env.BLACK].__name__))
+print("Comparing {} as WHITE and {} as BLACK".format(algos[WHITE].__name__, algos[BLACK].__name__))
 widgets = ["Games: ", progressbar.Percentage(), " ", progressbar.Bar(), " ", progressbar.ETA()]
-pbar = progressbar.ProgressBar(maxval=games, widgets=widgets).start()
-for i in range(games):
-    state = env.get_initial_state()
-    proc = env.AlphaStateProcessor()
-    proc.process(state)
-    color = env.WHITE
-    while not proc.isTerminal():
-        a = player[color].get_action(state, time)
-        env.perform_action(state, a, color)
-        proc.process(state)
-        color = env.get_oponent_color(color)
-    if proc.getTuplesNumber(4, env.WHITE) > 0:
-        points[env.WHITE] += 1
-    elif proc.getTuplesNumber(4, env.BLACK) > 0:
-        points[env.BLACK] += 1
+pbar = progressbar.ProgressBar(maxval=args['games'], widgets=widgets).start()
+for i in range(args['games']):
+    state = get_initial_state()
+    proc = SimpleStateProcessor(state)
+    proc.process()
+    color = WHITE
+    while not proc.is_terminal():
+        a = player[color].get_action(state, api.Timer(args['time']))
+        state = get_next_state(state, a, color)
+        proc = SimpleStateProcessor(state)
+        proc.process()
+        color = get_oponent_color(color)
+    if proc.get_winner() == WHITE:
+        points[WHITE] += 1
+    elif proc.get_winner() == BLACK:
+        points[BLACK] += 1
     else:
-        points[env.EMPTY] += 1
+        points[EMPTY] += 1
     pbar.update(i)
 pbar.finish()
 
@@ -71,12 +70,12 @@ def fit_to(s, chars):
         s += ' '
     return s
 
-print("RESULTS OF {} games:".format(games))
-total = points[env.WHITE] + points[env.BLACK] + points[env.EMPTY]
-chars = max(len(algos[env.WHITE].__name__), len(algos[env.BLACK].__name__))
-name_white = fit_to(algos[env.WHITE].__name__, chars)
-name_black = fit_to(algos[env.BLACK].__name__, chars)
+print("RESULTS OF {} games:".format(args['games']))
+total = points[WHITE] + points[BLACK] + points[EMPTY]
+chars = max(len(algos[WHITE].__name__), len(algos[BLACK].__name__))
+name_white = fit_to(algos[WHITE].__name__, chars)
+name_black = fit_to(algos[BLACK].__name__, chars)
 name_draws = fit_to("draws", chars)
-print("{0} {1:.2f}%".format(name_white, 100*points[env.WHITE]/total))
-print("{0} {1:.2f}%".format(name_black, 100*points[env.BLACK]/total))
-print("{0} {1:.2f}%".format(name_draws, 100*points[env.EMPTY]/total))
+print("{0} {1:.2f}%".format(name_white, 100*points[WHITE]/total))
+print("{0} {1:.2f}%".format(name_black, 100*points[BLACK]/total))
+print("{0} {1:.2f}%".format(name_draws, 100*points[EMPTY]/total))

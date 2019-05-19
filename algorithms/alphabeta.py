@@ -38,16 +38,3 @@ class AlphaBetaAlgorithm(api.Algorithm):
                 if alpha >= beta:
                     break
             return min_act, beta
-
-    def utility(self, state_proc, depth):
-        weight2 = 0
-        weight3 = 10
-        weight4 = 10000
-        enemy_color = env.get_oponent_color(self.color)
-        our_points = weight2 * state_proc.getTuplesNumber(2, self.color) + \
-                     weight3 * state_proc.getTuplesNumber(3, self.color) + \
-                     weight4 * state_proc.getTuplesNumber(4, self.color)
-        enemy_points = weight2 * state_proc.getTuplesNumber(2, enemy_color) + \
-                       weight3 * state_proc.getTuplesNumber(3, enemy_color) + \
-                       weight4 * state_proc.getTuplesNumber(4, enemy_color)
-        return (our_points-enemy_points)*depth

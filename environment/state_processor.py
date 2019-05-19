@@ -43,46 +43,6 @@ class DiagLeftUpIterator(Iterator):
     def next(w, h):
         return w + 1, h - 1
 
-class AlphaStateProcessor:
-    def _get_initial_mapping(self):
-        return [0, 0, 0, 0, 0, 0, 0, 0]
-
-    def process(self, state):
-        self.s = [list(c) for c in state]
-        self.full = len(get_legal_actions(state)) == 0
-        for c in self.s:
-            while len(c) < HEIGHT:
-                c.append(EMPTY)
-
-        self.vertical = dict()
-        self.horizontal = dict()
-        self.diagRightUp = dict()
-        self.diagLeftUp = dict()
-        self.total = dict()
-        self.total[WHITE] = self._get_initial_mapping()
-        self.total[BLACK] = self._get_initial_mapping()
-        for iterator, sumDict in zip(
-                [VertIterator, HorIterator, DiagRightUpIterator, DiagLeftUpIterator],
-                [self.vertical, self.horizontal, self.diagRightUp, self.diagLeftUp]):
-            for color in (WHITE, BLACK):
-                sumDict[color] = self._get_initial_mapping()
-                for w, h in iterator.start_positions():
-                    sum = 0
-                    while 0 <= w < WIDTH and 0 <= h < HEIGHT:
-                        if self.s[w][h] == color:
-                            sum += 1
-                        else:
-                            sum = 0
-                        sumDict[color][sum] += 1
-                        self.total[color][sum] += 1
-                        w, h = iterator.next(w, h)
-
-    def isTerminal(self):
-        return self.getTuplesNumber(4, WHITE) + self.getTuplesNumber(4, BLACK) > 0 or self.full
-
-    def getTuplesNumber(self, k, color):
-        return self.total[color][k]
-
 class SimpleStateProcessor(api.StateProcessor):
     def process(self):
         state = [list(c) for c in self.state]
@@ -93,7 +53,7 @@ class SimpleStateProcessor(api.StateProcessor):
             for i in range(HEIGHT-l):
                 c.append(EMPTY)
 
-        for iterator in [VertIterator, HorIterator, DiagLeftUpIterator, DiagLeftUpIterator]:
+        for iterator in [VertIterator, HorIterator, DiagLeftUpIterator, DiagRightUpIterator]:
             for w, h in iterator.start_positions():
                 black = 0
                 white = 0
@@ -118,3 +78,67 @@ class SimpleStateProcessor(api.StateProcessor):
                     w, h = iterator.next(w, h)
         self.terminal = full_colums == 7
         self.winner = EMPTY
+
+
+class AlphaStateProcessor(SimpleStateProcessor):
+
+    def process(self):
+        super().process()
+        if self.is_terminal():
+            if self.winner == WHITE:
+                self.value = 10000
+            elif self.winner == BLACK:
+                self.value = -10000
+            else:
+                self.value = 0
+            return
+
+        self.s = [list(c) for c in self.state]
+        for c in self.s:
+            while len(c) < HEIGHT:
+                c.append(EMPTY)
+
+        self.counts = dict()
+        self.counts[WHITE] = [0, 0, 0, 0, 0]
+        self.counts[BLACK] = [0, 0, 0, 0, 0]
+        for iterator in [VertIterator, HorIterator, DiagRightUpIterator, DiagLeftUpIterator]:
+            for color in (WHITE, BLACK):
+                for w, h in iterator.start_positions():
+                    back_empty = 0
+                    l = 0
+                    gaps = 0
+                    while 0 <= w < WIDTH and 0 <= h < HEIGHT:
+                        if self.s[w][h] == color:
+                            l += 1
+                        elif self.s[w][h] == EMPTY:
+                            if l == 0:
+                                back_empty += 1
+                            else:
+                                gaps += 1
+                                l += 1
+                        nw, nh = iterator.next(w, h)
+                        if self.s[w][h] == get_oponent_color(color) or l == 4 or not (0 <= nw < WIDTH and 0 <= nh < HEIGHT):
+                            if l == 4:
+                                self.counts[color][4-gaps] += 1
+                            elif l == 3 and back_empty > 0:
+                                self.counts[color][3-gaps] += 1
+                            elif l == 2 and back_empty > 1:
+                                self.counts[color][2-gaps] += 1
+
+                            if l == 4:
+                                back_empty = 1
+                            else:
+                                back_empty = 0
+                            gaps = 0
+                            l = 0
+
+                        w, h = iterator.next(w, h)
+
+        weight2 = 1
+        weight3 = 20
+        white_points = weight2*self.counts[WHITE][2] + weight3*self.counts[WHITE][3]
+        black_points = weight2*self.counts[BLACK][2] + weight3*self.counts[BLACK][3]
+        self.value =  white_points - black_points
+
+    def utility(self, my_color):
+        return self.value if my_color == WHITE else -self.value

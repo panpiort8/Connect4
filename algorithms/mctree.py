@@ -81,8 +81,8 @@ class MCTreeSearch(api.Algorithm):
     def get_action(self, state, timer = Timer(2), **kwargs):
         if not self.reuse or self.root == None or self.root.state != state:
             self.root = Node(state, None, self.color)
-        else:
-            print('REUSED TREE SIZE:', self.root.size)
+        # else:
+            # print('REUSED TREE SIZE:', self.root.size)
 
         while not timer.is_over():
             node = self.selection()
@@ -93,7 +93,7 @@ class MCTreeSearch(api.Algorithm):
             reward = self.rollout(node)
             self.backpropagate(node, reward)
 
-        print('SIZE OF TREE:', self.root.size)
+        # print('SIZE OF TREE:', self.root.size)
         a = self.tree_strategy.get_next_edge(self.root, 0)
         return a
 
