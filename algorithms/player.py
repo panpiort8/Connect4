@@ -1,7 +1,6 @@
 from algorithms import *
 from environment import *
 import sys
-import random
 
 class PlayerPseudoAlgorithm(Algorithm):
     def get_action(self, state, timer, max_depth=None):

@@ -70,19 +70,18 @@ class Node:
 class MCTreeSearch(api.Algorithm):
     def __init__(self, color, tree_strategy = UCBTreeStrategy(),
                  rollout_strategy = RandomRolloutStrategy(),
-                 gamma=1.0, reuse = True):
+                 gamma=1.0, reuse = True, rollouts=1):
         super().__init__(color)
         self.tree_strategy = tree_strategy
         self.rollout_strategy = rollout_strategy
         self.gamma = gamma
         self.reuse = reuse
+        self.rollouts = rollouts
         self.root = None
 
     def get_action(self, state, timer = Timer(2), **kwargs):
         if not self.reuse or self.root == None or self.root.state != state:
             self.root = Node(state, None, self.color)
-        # else:
-            # print('REUSED TREE SIZE:', self.root.size)
 
         while not timer.is_over():
             node = self.selection()
@@ -90,10 +89,11 @@ class MCTreeSearch(api.Algorithm):
                 node.generate_sons()
                 self.update_sizes(node)
                 node = random.choice(list(node.sons.items()))[1]
-            reward = self.rollout(node)
-            self.backpropagate(node, reward)
+            rewards = []
+            for i in range(self.rollouts):
+                rewards.append(self.rollout(node))
+            self.backpropagate(node, np.average(rewards))
 
-        # print('SIZE OF TREE:', self.root.size)
         a = self.tree_strategy.get_next_edge(self.root, 0)
         return a
 
@@ -109,13 +109,13 @@ class MCTreeSearch(api.Algorithm):
             return get_reward(self.color, node.winner)
         state = node.state
         terminal = False
-        depth = 0
+        # depth = 0
         color = self.color
         while not terminal:
             state = self.rollout_strategy.get_next_state(state, color)
             color = get_oponent_color(color)
             terminal, winner = check_if_terminal(state)
-            depth += 1
+            # depth += 1
         # return get_reward(self.color, winner)*np.power(self.gamma, depth)
         return get_reward(self.color, winner)
 
@@ -126,7 +126,7 @@ class MCTreeSearch(api.Algorithm):
             node.visits += 1
             node.total_reward += turn*reward
             node = node.parent
-            turn*=-1
+            turn *= -1
 
     def update_sizes(self, node):
         while node is not None:
@@ -135,5 +135,5 @@ class MCTreeSearch(api.Algorithm):
 
 
     def update_move(self, action):
-        if self.root != None:
+        if self.root != None and self.root.sons != None:
             self.root = self.root.sons[action]

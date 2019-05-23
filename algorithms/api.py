@@ -10,7 +10,7 @@ class Timer:
 
 
 class Algorithm:
-    def __init__(self, color):
+    def __init__(self, color, **kwargs):
         self.color = color
         self.nodes = 0
 

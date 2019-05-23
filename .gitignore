@@ -1,2 +1,5 @@
 .idea/
 test.py
+test.sh
+results/
+*__pycache__
